@@ -6,11 +6,12 @@ import './App.css';
 
 const theme = createTheme({
   palette: {
+    mode: 'dark', // Enable dark mode
     primary: {
-      main: '#1976d2',
+      main: '#d32f2f', // Red color
     },
     secondary: {
-      main: '#dc004e',
+      main: '#1976d2', // Blue color (optional)
     },
   },
 });
