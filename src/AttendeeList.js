@@ -1,6 +1,6 @@
 // src/AttendeeList.js
 import React, { useState, useEffect } from 'react';
-import { TextField, Card, CardContent, Typography, Container, Grid } from '@mui/material';
+import { Autocomplete, Card, CardContent, Typography, Container, Grid, TextField } from '@mui/material';
 import { styled } from '@mui/material/styles';
 
 const StyledContainer = styled(Container)({
@@ -13,7 +13,7 @@ const StyledContainer = styled(Container)({
 });
 
 const StyledCard = styled(Card)(({ isClicked }) => ({
-  backgroundColor: isClicked ? '#d32f2f' : '#424242', // Change background color when clicked
+  backgroundColor: isClicked ? '#d32f2f' : '#424242',
   color: '#fff',
   transition: 'transform 0.2s, background-color 0.3s',
   '&:hover': {
@@ -28,14 +28,11 @@ const StyledHeader = styled('div')({
   borderRadius: '4px 4px 0 0',
 });
 
-const StyledSearchInput = styled(TextField)({
-  marginBottom: '20px',
-});
-
 const AttendeeList = () => {
   const [attendees, setAttendees] = useState([]);
   const [searchTerm, setSearchTerm] = useState('');
-  const [clickedAttendeeId, setClickedAttendeeId] = useState(null);
+  const [selectedAttendee, setSelectedAttendee] = useState(null);
+  const [options, setOptions] = useState([]);
 
   useEffect(() => {
     fetch('/attendees.json')
@@ -43,30 +40,48 @@ const AttendeeList = () => {
       .then(data => setAttendees(data));
   }, []);
 
-  const filteredAttendees = attendees.filter(attendee =>
-    attendee.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    attendee.email.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  useEffect(() => {
+    if (!searchTerm) {
+      setOptions([]);
+    } else {
+      setOptions(attendees.filter(option => option.name.toLowerCase().includes(searchTerm.toLowerCase())));
+    }
+  }, [attendees, searchTerm]);
 
-  const handleCardClick = (id) => {
-    setClickedAttendeeId(id === clickedAttendeeId ? null : id);
+  const handleInputChange = (event, value) => {
+    setSearchTerm(value);
+  };
+
+  const handleSelectChange = (event, value) => {
+    setSelectedAttendee(value);
+    setSearchTerm(value ? value.name : '');
   };
 
   return (
     <StyledContainer>
-      <StyledSearchInput
-        label="Search attendees"
-        variant="outlined"
-        fullWidth
-        value={searchTerm}
-        onChange={e => setSearchTerm(e.target.value)}
+      <Autocomplete
+        options={options}
+        getOptionLabel={(option) => option.name}
+        value={selectedAttendee}
+        onChange={handleSelectChange}
+        inputValue={searchTerm}
+        onInputChange={handleInputChange}
+        renderInput={(params) => (
+          <TextField
+            {...params}
+            label="Search attendees"
+            variant="outlined"
+            fullWidth
+            margin="normal"
+          />
+        )}
       />
       <Grid container spacing={3}>
-        {filteredAttendees.map(attendee => (
+        {attendees.map(attendee => (
           <Grid item xs={12} sm={6} md={4} key={attendee.id}>
             <StyledCard
-              isClicked={attendee.id === clickedAttendeeId}
-              onClick={() => handleCardClick(attendee.id)}
+              isClicked={selectedAttendee && attendee.id === selectedAttendee.id}
+              onClick={() => setSelectedAttendee(attendee)}
             >
               <StyledHeader>
                 <Typography variant="h5" component="div">
